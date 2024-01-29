@@ -35,6 +35,7 @@ def get_chat_response(message_input):
       messages=messages
     )
     message_text = response["choices"][0]["message"]["content"]
+    
     return message_text
   except Exception as e:
     return

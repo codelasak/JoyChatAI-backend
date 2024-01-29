@@ -7,6 +7,8 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from decouple import config
 import openai
+from datetime import datetime
+
 
 
 # Custom function imports
@@ -30,7 +32,6 @@ origins = [
     "http://localhost:5174",
     "http://localhost:4173",
     "http://localhost:3000",
-    "https://joyai-chat.vercel.app"
 ]
 
 
@@ -71,13 +72,17 @@ async def post_audio(file: UploadFile = File(...)):
     # Decode audio
     message_decoded = convert_audio_to_text(audio_input)
 
+    #print (message_decoded)
+    #print ("STT", datetime.now())
+
     # Guard: Ensure output
     if not message_decoded:
         raise HTTPException(status_code=400, detail="Failed to decode audio")
 
     # Get chat response
     chat_response = get_chat_response(message_decoded)
-
+    #print (chat_response)
+    #print ("chat", datetime.now())
     # Store messages
     store_messages(message_decoded, chat_response)
 
@@ -87,7 +92,7 @@ async def post_audio(file: UploadFile = File(...)):
 
     # Convert chat response to audio
     audio_output = convert_text_to_speech(chat_response)
-
+    #print ("SST", datetime.now())
     # Guard: Ensure output
     if not audio_output:
         raise HTTPException(status_code=400, detail="Failed audio output")

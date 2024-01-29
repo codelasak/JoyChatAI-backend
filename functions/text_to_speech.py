@@ -11,7 +11,7 @@ def convert_text_to_speech(message):
     "model_id": "eleven_multilingual_v2",
     "voice_settings": {
         "stability": 0.5,
-        "similarity_boost": 0.5
+        "similarity_boost": 0.9
     }
   }
 
@@ -22,7 +22,7 @@ def convert_text_to_speech(message):
 
   # Construct request headers and url
   headers = { "xi-api-key": ELEVEN_LABS_API_KEY, "Content-Type": "application/json", "accept": "audio/mpeg" }
-  endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_kid}"
+  endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_kid}/stream"
 
   try:
     response = requests.post(endpoint, json=body, headers=headers)
