@@ -1,3 +1,4 @@
+#source venv/bin/activate
 # uvicorn main:app
 # uvicorn main:app --reload
 
@@ -28,10 +29,11 @@ app = FastAPI()
 
 # CORS - Origins
 origins = [
-    "https://joy-chat-ai-frontend.vercel.app/"
+    "https://joy-chat-ai-frontend.vercel.app",
+    "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:4173",
-    "http://localhost:3000"
+    "http://localhost:3000",
 ]
 
 
@@ -42,6 +44,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Access-Control-Allow-Origin"],
 )
 
 
