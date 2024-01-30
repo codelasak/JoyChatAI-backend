@@ -22,7 +22,7 @@ def convert_text_to_speech(message):
 
   # Construct request headers and url
   headers = { "xi-api-key": ELEVEN_LABS_API_KEY, "Content-Type": "application/json", "accept": "audio/mpeg" }
-  endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_kid}/stream"
+  endpoint = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_kid}/stream?optimize_streaming_latency=3"
 
   try:
     response = requests.post(endpoint, json=body, headers=headers)

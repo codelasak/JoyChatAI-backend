@@ -16,6 +16,9 @@ from datetime import datetime
 from functions.text_to_speech import convert_text_to_speech
 from functions.openai_requests import convert_audio_to_text, get_chat_response
 from functions.database import store_messages, reset_messages
+from functions.jokes import get_joke
+from functions.dance import dancing
+from functions.musics import play_music
 
 
 # Get Environment Vars

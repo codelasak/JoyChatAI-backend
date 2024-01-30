@@ -1,0 +1,2 @@
+def dancing():
+    return "dancing"
