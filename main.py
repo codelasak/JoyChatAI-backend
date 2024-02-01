@@ -74,12 +74,11 @@ async def post_audio(file: UploadFile = File(...)):
     with open(file.filename, "wb") as buffer:
         buffer.write(file.file.read())
     audio_input = open(file.filename, "rb")
-
+    print ("audio file saved")
     # Decode audio
     message_decoded = convert_audio_to_text(audio_input)
-
-    #print (message_decoded)
-    #print ("STT", datetime.now())
+    print (message_decoded)
+    print ("STT", datetime.now())
 
     # Guard: Ensure output
     if not message_decoded:
@@ -87,8 +86,8 @@ async def post_audio(file: UploadFile = File(...)):
 
     # Get chat response
     chat_response = get_chat_response(message_decoded)
-    #print (chat_response)
-    #print ("chat", datetime.now())
+    print (chat_response)
+    print ("chat", datetime.now())
     # Store messages
     store_messages(message_decoded, chat_response)
 
@@ -98,7 +97,7 @@ async def post_audio(file: UploadFile = File(...)):
 
     # Convert chat response to audio
     audio_output = convert_text_to_speech(chat_response)
-    #print ("SST", datetime.now())
+    print ("SST", datetime.now())
     # Guard: Ensure output
     if not audio_output:
         raise HTTPException(status_code=400, detail="Failed audio output")
