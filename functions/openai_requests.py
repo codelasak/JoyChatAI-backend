@@ -15,8 +15,10 @@ def convert_audio_to_text(audio_file):
   try:
     transcript = openai.Audio.transcribe("whisper-1", audio_file)
     message_text = transcript["text"]
+    print("convert_audio_to_text is ok")
     return message_text
   except Exception as e:
+    print ("ex: ", Exception)
     return
 
 # Open AI - Chat GPT
