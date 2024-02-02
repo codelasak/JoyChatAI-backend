@@ -18,7 +18,6 @@ def convert_audio_to_text(audio_file):
     print("convert_audio_to_text is ok")
     return message_text
   except Exception as e:
-    print ("ex: ", Exception.args[0])
     return
 
 # Open AI - Chat GPT
