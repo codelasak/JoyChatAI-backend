@@ -8,17 +8,25 @@ from functions.database import get_recent_messages
 openai.organization = config("OPEN_AI_ORG")
 openai.api_key = config("OPEN_AI_KEY")
 
-
 # Open AI - Whisper
 # Convert audio to text
 def convert_audio_to_text(audio_file):
-  try:
-    transcript = openai.Audio.transcribe("whisper-1", audio_file)
-    message_text = transcript["text"]
-    print("convert_audio_to_text is ok")
-    return message_text
-  except Exception as e:
-    return
+    try:
+        # Transcribe audio
+        transcript = openai.Audio.transcribe("whisper-1", audio_file)
+        message_text = transcript["text"]
+        print("convert_audio_to_text is ok")
+        return message_text
+
+    except ValueError as ve:
+        # Handle short audio file error
+        print(f"Error in convert_audio_to_text: {ve}")
+        return None
+
+    except Exception as e:
+        # Handle other exceptions
+        print(f"Error in convert_audio_to_text: {e}")
+        return None
 
 # Open AI - Chat GPT
 # Convert audio to text
