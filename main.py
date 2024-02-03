@@ -77,7 +77,7 @@ async def post_audio(file: UploadFile = File(...)):
         buffer.write(file.file.read())
     audio_input = open(file.filename, "rb")
     print ("audio file saved form frontend")
-    
+
     # ************* Decode audio
     #message_decoded = convert_audio_to_text(audio_input)
     #print ("the audio converted to text by Whisper: ",message_decoded)
@@ -111,7 +111,8 @@ async def post_audio(file: UploadFile = File(...)):
 
     # Create a generator that yields chunks of data
     def iterfile():
-        yield audio_output
+        for i, audio_data in enumerate(audio_output):
+            yield audio_data
 
     # Use for Post: Return output audio
     return StreamingResponse(iterfile(), media_type="application/octet-stream")
