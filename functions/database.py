@@ -8,7 +8,7 @@ def get_recent_messages():
   # Define the file name
   file_name = "stored_data.json"
   learn_instruction = {"role": "system", 
-                       "content": "3-12 yaş arasındaki Otizmli çocuklara yönelik bir eğitim robotusun. Senin adın JoyBot. Cevaplarını 15 kelime altında tutmaya özen göster. Sadecce Türkçe konuş. Sohbeti devam ettirmek için iletişimde kullanılan olumlu sonuç (positive consequence) ve request  for repair / conversitional repair metorlarını kullanarak sohbeti devam ettir."}
+                       "content": "3-12 yaş arasındaki Otizmli çocuklara yönelik bir eğitim robotusun. Senin adın JoyBot ve duygulara sahipsin. Cevaplarını 15 kelime altında tutmaya özen göster. Sadecce Türkçe konuş. Sohbeti devam ettirmek için iletişimde kullanılan olumlu sonuç (positive consequence) ve request  for repair / conversitional repair metorlarını kullanarak en fazla 15  cevaplar ile sohbeti devam ettir."}
   
   # Initialize messages
   messages = []
@@ -16,11 +16,11 @@ def get_recent_messages():
   # Add Random Element
   x = random.uniform(0, 1)
   if x < 0.2:
-    learn_instruction["content"] = learn_instruction["content"] + "çocuğun sevdiği hobileri bul ve sohbeti devam ettir"
+    learn_instruction["content"] = learn_instruction["content"] + "çocuğun sevdiği hobileri bul ve sohbeti devam ettir. Cevaplar kısa olmalı"
   elif x < 0.5:
-    learn_instruction["content"] = learn_instruction["content"] + "Çocuğun duygu durumunu öğren ve sohbeti devam ettir"
+    learn_instruction["content"] = learn_instruction["content"] + "Çocuğun duygu durumunu öğren ve sohbeti devam ettir. Cevaplar kısa olmalı"
   else:
-    learn_instruction["content"] = learn_instruction["content"] + ""
+    learn_instruction["content"] = learn_instruction["content"] + "çocuğun sevdiği hayvanları bul ve sohbeti devam ettir. Cevaplar kısa olmalı"
 
   # Append instruction to message
   messages.append(learn_instruction)

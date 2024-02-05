@@ -63,9 +63,9 @@ def convert_text_to_speech(message):
             "text": sentence.strip(),
             "model_id": "eleven_multilingual_v2",
             "voice_settings": {
-                "stability": 0.5,
+                "stability": 0.9,
                 "similarity_boost": 0.9
-            }
+            } 
         }
 
         try:
