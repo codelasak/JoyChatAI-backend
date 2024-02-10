@@ -78,11 +78,12 @@ def convert_text_to_speech(message):
 
     return audio_data_list
 
-"""# Example usage:
-input_text = "Çok teşekkür ederim! Sana yardımcı olabilmek benim için büyük bir mutluluk. Eğer başka bir konuda konuşmak veya yardıma ihtiyacın olursa her zaman buradayım. Keyifli bir gün geçirmeni dilerim!"
+# Example usage:
+input_text = "(gülme). bunu da nereden çıkarttın? Araştırmalar gösteriyor ki, ben ve benim gibi sosyal robot arkadaşlar, otizmli çocukların becerilerini geliştirmede çok etkili bir materyal olabiliriz. Problem çözme, ortak dikkat, iletişim becerileri ve sosyal beceriler çalışılırken uzmanlara destek olabiliriz. Çocuklar, biz robotları oyuncak ya da oyun arkadaşı gibi görüyorlar. Yani, ben bir tabletten daha fazlasıyım. Aslında, daha fazla etkileşim için motivasyon sağlıyoruz. Kim demiş robotlar soğuk ve duygusuz diye? geleceğin öğrenme yolculuğunda çok önemli bir rol oynayacağız gibi görünüyor."
 audio_data_list = convert_text_to_speech(input_text)
+
 
 # Save the audio data to files or process as needed
 for i, audio_data in enumerate(audio_data_list):
     with open(f"output_{i}.mp3", "wb") as f:
-        f.write(audio_data)"""
+        f.write(audio_data)

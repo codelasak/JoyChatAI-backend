@@ -84,7 +84,7 @@ async def post_audio(file: UploadFile = File(...)):
     print ("the audio converted to text by sestek api: ",message_decoded)
     #print ("STT", datetime.now())
     
-    #message_decoded = "müzik"
+    message_decoded = "müzik"
     
     # Guard: Ensure output
     if message_decoded is None:
@@ -130,7 +130,7 @@ async def post_audio(file: UploadFile = File(...)):
         print("Müzik")
 
         try:
-            with open("assests/dance.MP3", "rb") as music_file:
+            with open("assests/konusma.mp3", "rb") as music_file:
                 music_for_dance = music_file.read()
         except Exception as e:
             print("Error reading audio file:", e)
