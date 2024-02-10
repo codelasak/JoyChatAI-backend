@@ -84,7 +84,10 @@ async def post_audio(file: UploadFile = File(...)):
     print ("the audio converted to text by sestek api: ",message_decoded)
     #print ("STT", datetime.now())
     
-    message_decoded = "müzik"
+    test11 = True
+    if test11 == True:
+        message_decoded = "müzik"
+        test11 = False
     
     # Guard: Ensure output
     if message_decoded is None:
