@@ -34,6 +34,7 @@ app = FastAPI()
 origins = [
     "https://joy-chat-ai-frontend.vercel.app",
     "https://joyai-chat.vercel.app/",
+    "https://joybot.joysper.com/",
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:4173",
@@ -84,10 +85,7 @@ async def post_audio(file: UploadFile = File(...)):
     print ("the audio converted to text by sestek api: ",message_decoded)
     #print ("STT", datetime.now())
     
-    test11 = True
-    if test11 == True:
-        message_decoded = "müzik"
-        test11 = False
+    #message_decoded = "müzik"
     
     # Guard: Ensure output
     if message_decoded is None:
