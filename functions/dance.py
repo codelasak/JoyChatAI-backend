@@ -1,10 +1,11 @@
 import requests
 import time
 
+
 def dancing(direction, action):
-       # 192.168.9.190 Benay Telefonu
+   """    # 192.168.9.190 Benay Telefonu
    # 192.168.180.190 Abdullah
-    """url = "http://192.168.180.190/control"
+    url = "http://172.20.10.5/control"
     params = {'direction': direction, 'action': action}
     try:
         response = requests.get(url, params=params)
@@ -15,7 +16,7 @@ def dancing(direction, action):
     except Exception as e:
         print(f"Error: {e}")
 
-        """
+
 
 
 dance_moves = [
@@ -30,3 +31,4 @@ dance_moves = [
 for move in dance_moves:
     dancing(*move)
     time.sleep(1)  # Adjust sleep duration as need"""
+

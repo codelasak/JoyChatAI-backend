@@ -81,8 +81,8 @@ async def post_audio(file: UploadFile = File(...)):
     # ************* Decode audio
     #message_decoded = convert_audio_to_text(audio_input)
     #print ("the audio converted to text by Whisper: ",message_decoded)
-    message_decoded = convert_audio_to_text_sestek(audio_input)
-    print ("the audio converted to text by sestek api: ",message_decoded)
+    message_decoded = convert_audio_to_text(audio_input)
+    print ("the audio converted to text by whisper api: ",message_decoded)
     #print ("STT", datetime.now())
     
     #message_decoded = "müzik"
@@ -101,11 +101,13 @@ async def post_audio(file: UploadFile = File(...)):
             ('left', 'start'),
             ('stop', 'stop')
         ]
-
-        # Loop through the dance moves
+        """
+         # Loop through the dance moves
         for move in dance_moves:
             dancing(*move)
             time.sleep(2)  # Adjust sleep duration as need
+        """
+       
 
     elif "fıkra" in message_decoded.lower():
         joke = get_joke() + "fıkrayı beğendin mi?"
