@@ -34,6 +34,7 @@ app = FastAPI()
 # CORS - Origins
 origins = [
     "https://joybot.fennaver.com/",
+    "https://master.dwiknvwkzox6t.amplifyapp.com/",
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:4173",
