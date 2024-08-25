@@ -10,6 +10,7 @@ from decouple import config
 import openai
 from datetime import datetime
 import time
+from mangum import Mangum
 
 # Custom function imports
 from functions.text_to_speech import convert_text_to_speech
@@ -32,9 +33,7 @@ app = FastAPI()
 
 # CORS - Origins
 origins = [
-    "https://joy-chat-ai-frontend.vercel.app",
-    "https://joyai-chat.vercel.app/",
-    "https://joybot.joysper.com/",
+    "https://joybot.fennaver.com/",
     "http://localhost:5173",
     "http://localhost:5174",
     "http://localhost:4173",
@@ -70,22 +69,20 @@ async def reset_conversation():
 # Note: Not playing back in browser when using post request.
 @app.post("/post-audio/")
 async def post_audio(file: UploadFile = File(...)):
-
-    # Convert audio to text - production
+    print(f"Received file: {file.filename}, Content-Type: {file.content_type}")
+    
     # Save the file temporarily
     with open(file.filename, "wb") as buffer:
-        buffer.write(file.file.read())
+        content = await file.read()
+        buffer.write(content)
+    print(f"Saved file: {file.filename}, Size: {len(content)} bytes")
+
     audio_input = open(file.filename, "rb")
-    print ("audio file saved form frontend")
+    print("Audio file saved from frontend")
 
     # ************* Decode audio
-    #message_decoded = convert_audio_to_text(audio_input)
-    #print ("the audio converted to text by Whisper: ",message_decoded)
     message_decoded = convert_audio_to_text(audio_input)
-    print ("the audio converted to text by whisper api: ",message_decoded)
-    #print ("STT", datetime.now())
-    
-    #message_decoded = "müzik"
+    print(f"The audio converted to text by whisper api: {message_decoded}")
     
     # Guard: Ensure output
     if message_decoded is None:
@@ -113,7 +110,7 @@ async def post_audio(file: UploadFile = File(...)):
         joke = get_joke() + "fıkrayı beğendin mi?"
         # Convert chat response to audio
         audio_output = convert_text_to_speech(joke) 
-        print ("audio output from elevenLabs TTS is done")
+        print("audio output from elevenLabs TTS is done")
         #print ("SST", datetime.now())
 
         # Guard: Ensure output
@@ -158,7 +155,7 @@ async def post_audio(file: UploadFile = File(...)):
     else:
         # Get chat response
         chat_response = get_chat_response(message_decoded)
-        print ("chatGPT Response: ",chat_response)
+        print("chatGPT Response: ",chat_response)
         #print ("chatGPT", datetime.now())
         # Store messages
         store_messages(message_decoded, chat_response)
@@ -171,7 +168,7 @@ async def post_audio(file: UploadFile = File(...)):
         #chat_response = "Merhaba Ben Kiki! Sana birkaç bilgi anlatayım mı?"
         # Convert chat response to audio
         audio_output = convert_text_to_speech(chat_response)
-        print ("audio output from elevenLabs TTS is done")
+        print("audio output from elevenLabs TTS is done")
         #print ("SST", datetime.now())
 
         # Guard: Ensure output
@@ -185,3 +182,6 @@ async def post_audio(file: UploadFile = File(...)):
 
         # Use for Post: Return output audio
         return StreamingResponse(iterfile(), media_type="application/octet-stream")
+    
+
+handler = Mangum(app)
