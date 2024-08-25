@@ -9,3 +9,6 @@ python-multipart==0.0.6
 requests==2.28.2
 urllib3==1.26.16
 uvicorn==0.20.0
+decouple
+mangum
+requests
