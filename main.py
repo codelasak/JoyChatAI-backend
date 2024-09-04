@@ -1,16 +1,23 @@
-#source venv/bin/activate
+# pm2 start fastapi.json
+# source venv/bin/activate
 # uvicorn main:app
-# uvicorn main:app --reload
+# uvicorn main:app --reload 
+# pm2 logs fastapi-app 
+# sudo nano /etc/nginx/sites-enabled/fastapi_nginx
+
 
 # Main imports
 from fastapi import FastAPI, File, UploadFile, HTTPException, status
 from fastapi.responses import StreamingResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from decouple import config
 import openai
 from datetime import datetime
-import time
-from mangum import Mangum
+import os
+from io import BytesIO
+from typing import List
+
+
+
 
 # Custom function imports
 from functions.text_to_speech import convert_text_to_speech
@@ -19,13 +26,10 @@ from functions.database import store_messages, reset_messages
 from functions.jokes import get_joke
 from functions.dance import dancing
 from functions.musics import play_music
-from functions.sestek_STT import convert_audio_to_text_sestek
 
-
+openai.organization = os.getenv("OPEN_AI_ORG", "org-tLC3pK3Zbdk5EHdc2RCzOvbd")
+openai.api_key = os.getenv("OPEN_AI_KEY", "sk-proj-yCY7HWbCxinXxzvF4FuwT3BlbkFJVbvYNbIo0qZQmbSmpTQM")
 # Get Environment Vars
-openai.organization = config("OPEN_AI_ORG")
-openai.api_key = config("OPEN_AI_KEY")
-
 
 # Initiate App
 app = FastAPI()
@@ -45,7 +49,7 @@ origins = [
 # CORS - Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -54,13 +58,13 @@ app.add_middleware(
 
 
 # Check health
-@app.get("/health")
+@app.get("/api/health")
 async def check_health():
     return {"response": "healthy"}
 
 
 # Reset Conversation
-@app.get("/reset")
+@app.get("/api/reset")
 async def reset_conversation():
     reset_messages()
     return {"response": "conversation reset"}
@@ -68,21 +72,18 @@ async def reset_conversation():
 
 # Post bot response
 # Note: Not playing back in browser when using post request.
-@app.post("/post-audio/")
+@app.post("/api/post-audio/")
 async def post_audio(file: UploadFile = File(...)):
     print(f"Received file: {file.filename}, Content-Type: {file.content_type}")
     
     # Save the file temporarily
-    with open(file.filename, "wb") as buffer:
-        content = await file.read()
-        buffer.write(content)
-    print(f"Saved file: {file.filename}, Size: {len(content)} bytes")
+    # Read the file content
+    content = await file.read()
+    print(f"File size: {len(content)} bytes")
 
-    audio_input = open(file.filename, "rb")
-    print("Audio file saved from frontend")
 
     # ************* Decode audio
-    message_decoded = convert_audio_to_text(audio_input)
+    message_decoded = convert_audio_to_text(content)
     print(f"The audio converted to text by whisper api: {message_decoded}")
     
     # Guard: Ensure output
@@ -110,22 +111,27 @@ async def post_audio(file: UploadFile = File(...)):
     elif "fıkra" in message_decoded.lower():
         joke = get_joke() + "fıkrayı beğendin mi?"
         # Convert chat response to audio
-        audio_output = convert_text_to_speech(joke) 
+        audio_streams = convert_text_to_speech(joke) 
         print("audio output from elevenLabs TTS is done")
         #print ("SST", datetime.now())
 
         # Guard: Ensure output
-        if not audio_output:
+        if audio_streams:
             raise HTTPException(status_code=400, detail="Failed audio output")
 
         # Create a generator that yields chunks of data
         def iterfile():
-            for i, audio_data in enumerate(audio_output):
-                yield audio_data
+            for stream in audio_streams:
+                if isinstance(stream, BytesIO):
+                    stream.seek(0)
+                    yield from stream
+                else:
+                    yield stream
+    
 
         # Use for Post: Return output audio
-        return StreamingResponse(iterfile(), media_type="application/octet-stream")
-    
+        return StreamingResponse(iterfile(), media_type="audio/mpeg")
+
     elif "müzik" in message_decoded.lower():
 
         print("Müzik")
@@ -137,6 +143,8 @@ async def post_audio(file: UploadFile = File(...)):
             print("Error reading audio file:", e)
 
         print("Audio Data Length:", len(music_for_dance))
+        
+        
         def iterfile():
             yield music_for_dance
 
@@ -168,21 +176,24 @@ async def post_audio(file: UploadFile = File(...)):
 
         #chat_response = "Merhaba Ben Kiki! Sana birkaç bilgi anlatayım mı?"
         # Convert chat response to audio
-        audio_output = convert_text_to_speech(chat_response)
+        audio_streams = convert_text_to_speech(chat_response)
         print("audio output from elevenLabs TTS is done")
         #print ("SST", datetime.now())
 
         # Guard: Ensure output
-        if not audio_output:
+        if not audio_streams:
             raise HTTPException(status_code=400, detail="Failed audio output")
 
         # Create a generator that yields chunks of data
+        # Create a generator that yields chunks of data
         def iterfile():
-            for i, audio_data in enumerate(audio_output):
-                yield audio_data
+            for stream in audio_streams:
+                if isinstance(stream, BytesIO):
+                    stream.seek(0)
+                    yield from stream
+                else:
+                    yield stream
 
         # Use for Post: Return output audio
-        return StreamingResponse(iterfile(), media_type="application/octet-stream")
+        return StreamingResponse(iterfile(), media_type="audio/mpeg")
     
-
-handler = Mangum(app)

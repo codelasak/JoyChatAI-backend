@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+package/
 lib64/
 parts/
 sdist/
@@ -116,3 +117,8 @@ venv.bak/
 .terraform
 *.tfstate 
 *.tfstate.backup
+
+*.zip
+*.tar.gz
+
+

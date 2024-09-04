@@ -1,0 +1,5 @@
+{
+    "name": "fastapi-app",
+    "script": "uvicorn main:app --reload", 
+      "PYTHONPATH": "."
+  }
