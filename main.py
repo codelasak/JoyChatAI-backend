@@ -1,5 +1,5 @@
 # pm2 start fastapi.json
-# source venv/bin/activate
+# source env/bin/activate
 # uvicorn main:app
 # uvicorn main:app --reload 
 # pm2 logs fastapi-app 
@@ -7,7 +7,7 @@
 
 
 # Main imports
-from fastapi import FastAPI, File, UploadFile, HTTPException, status
+from fastapi import FastAPI, File, UploadFile, HTTPException, status, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 import openai
@@ -15,7 +15,10 @@ from datetime import datetime
 import os
 from io import BytesIO
 from typing import List
-
+import asyncio
+import base64
+import io
+from pydantic import BaseModel
 
 
 
@@ -26,6 +29,8 @@ from functions.database import store_messages, reset_messages
 from functions.jokes import get_joke
 from functions.dance import dancing
 from functions.musics import play_music
+from functions.emotionDetection import detect_emotion_and_gaze, reset_gaze_times
+
 
 openai.organization = os.getenv("OPEN_AI_ORG", "org-tLC3pK3Zbdk5EHdc2RCzOvbd")
 openai.api_key = os.getenv("OPEN_AI_KEY", "sk-proj-yCY7HWbCxinXxzvF4FuwT3BlbkFJVbvYNbIo0qZQmbSmpTQM")
@@ -37,7 +42,7 @@ app = FastAPI()
 
 # CORS - Origins
 origins = [
-    "https://joybot.fennaver.com/",
+    "https://api.fennaver.com/",
     "https://master.dwiknvwkzox6t.amplifyapp.com/",
     "http://localhost:5173",
     "http://localhost:5174",
@@ -53,9 +58,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["Access-Control-Allow-Origin"],
+    expose_headers=["*"],
 )
 
+class ImageData(BaseModel):
+    image: str
 
 # Check health
 @app.get("/api/health")
@@ -69,131 +76,56 @@ async def reset_conversation():
     reset_messages()
     return {"response": "conversation reset"}
 
+@app.post("/api/detect-emotion-and-gaze")
+async def emotion_and_gaze_detection(image_data: ImageData):
+    try:
+        result = detect_emotion_and_gaze(image_data.image)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-# Post bot response
-# Note: Not playing back in browser when using post request.
-@app.post("/api/post-audio/")
-async def post_audio(file: UploadFile = File(...)):
-    print(f"Received file: {file.filename}, Content-Type: {file.content_type}")
-    
-    # Save the file temporarily
-    # Read the file content
-    content = await file.read()
-    print(f"File size: {len(content)} bytes")
+@app.post("/api/reset-gaze-times")
+async def reset_gaze_tracking():
+    reset_gaze_times()
+    return {"message": "Gaze times reset successfully"}
+
+@app.websocket("/api/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            audio_data = base64.b64decode(data)
+            
+            # Convert audio to text
+            message_decoded = convert_audio_to_text(audio_data)
+            
+            if message_decoded:
+                # Get chat response
+                chat_response = get_chat_response(message_decoded)
+                
+                # Store messages
+                store_messages(message_decoded, chat_response)
+                
+                # Convert chat response to audio
+                audio_streams = convert_text_to_speech(chat_response)
+                
+                # Send audio back to client
+                for stream in audio_streams:
+                    if isinstance(stream, io.BytesIO):
+                        stream.seek(0)
+                        audio_chunk = stream.read()
+                        await websocket.send_bytes(audio_chunk)
+                        print(f"Sent audio chunk of size: {len(audio_chunk)} bytes")
+                    else:
+                        await websocket.send_bytes(stream)
+                        print(f"Sent audio stream of type: {type(stream)}")
+            else:
+                await websocket.send_text("Failed to decode audio")
+    except WebSocketDisconnect:
+        print("WebSocket disconnected")
+    except Exception as e:
+        print(f"Error in WebSocket: {e}")
+        await websocket.close()
 
 
-    # ************* Decode audio
-    message_decoded = convert_audio_to_text(content)
-    print(f"The audio converted to text by whisper api: {message_decoded}")
-    
-    # Guard: Ensure output
-    if message_decoded is None:
-        raise HTTPException(status_code=400, detail="Failed to decode audio")
-    
-    # Check if "dance" keyword is present in the decoded message
-    if "dans" in message_decoded.lower():
-        # Example dance routine
-        dance_moves = [
-            ('forward', 'start'),
-            ('right', 'start'),
-            ('backward', 'start'),
-            ('left', 'start'),
-            ('stop', 'stop')
-        ]
-        """
-         # Loop through the dance moves
-        for move in dance_moves:
-            dancing(*move)
-            time.sleep(2)  # Adjust sleep duration as need
-        """
-       
-
-    elif "fıkra" in message_decoded.lower():
-        joke = get_joke() + "fıkrayı beğendin mi?"
-        # Convert chat response to audio
-        audio_streams = convert_text_to_speech(joke) 
-        print("audio output from elevenLabs TTS is done")
-        #print ("SST", datetime.now())
-
-        # Guard: Ensure output
-        if audio_streams:
-            raise HTTPException(status_code=400, detail="Failed audio output")
-
-        # Create a generator that yields chunks of data
-        def iterfile():
-            for stream in audio_streams:
-                if isinstance(stream, BytesIO):
-                    stream.seek(0)
-                    yield from stream
-                else:
-                    yield stream
-    
-
-        # Use for Post: Return output audio
-        return StreamingResponse(iterfile(), media_type="audio/mpeg")
-
-    elif "müzik" in message_decoded.lower():
-
-        print("Müzik")
-
-        try:
-            with open("assests/konusma.mp3", "rb") as music_file:
-                music_for_dance = music_file.read()
-        except Exception as e:
-            print("Error reading audio file:", e)
-
-        print("Audio Data Length:", len(music_for_dance))
-        
-        
-        def iterfile():
-            yield music_for_dance
-
-        # Use for Post: Return output audio
-        return StreamingResponse(iterfile(), media_type="application/octet-stream")
-    
-
-    # Check if "video" keyword is present in the decoded message
-    elif "videooo" in message_decoded.lower():
-        # Redirect to a YouTube URL (you can replace this with the desired URL)
-
-        print ("YouTube")
-        youtube_url = "https://www.youtube.com/"
-        # Use create_task to run this asynchronously in the background
-        return RedirectResponse(youtube_url, status_code=status.HTTP_303_SEE_OTHER)
-    
-    else:
-        # Get chat response
-        chat_response = get_chat_response(message_decoded)
-        print("chatGPT Response: ",chat_response)
-        #print ("chatGPT", datetime.now())
-        # Store messages
-        store_messages(message_decoded, chat_response)
-
-        # Guard: Ensure output
-        if not chat_response:
-            raise HTTPException(status_code=400, detail="Failed chat response")
-        
-
-        #chat_response = "Merhaba Ben Kiki! Sana birkaç bilgi anlatayım mı?"
-        # Convert chat response to audio
-        audio_streams = convert_text_to_speech(chat_response)
-        print("audio output from elevenLabs TTS is done")
-        #print ("SST", datetime.now())
-
-        # Guard: Ensure output
-        if not audio_streams:
-            raise HTTPException(status_code=400, detail="Failed audio output")
-
-        # Create a generator that yields chunks of data
-        # Create a generator that yields chunks of data
-        def iterfile():
-            for stream in audio_streams:
-                if isinstance(stream, BytesIO):
-                    stream.seek(0)
-                    yield from stream
-                else:
-                    yield stream
-
-        # Use for Post: Return output audio
-        return StreamingResponse(iterfile(), media_type="audio/mpeg")
-    

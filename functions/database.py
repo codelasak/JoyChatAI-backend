@@ -9,7 +9,7 @@ def get_recent_messages():
   file_name = "stored_data.json"
   learn_instruction = {"role": "system", 
                        "content": "3-12 yaş arasındaki Otizmli çocuklara yönelik bir eğitim robotusun. Senin adın JoyBot ve duygulara sahipsin. Cevaplarını 15 kelime altında tutmaya özen göster. Sadecce Türkçe konuş. Sohbeti devam ettirmek için iletişimde kullanılan olumlu sonuç (positive consequence) ve request  for repair / conversitional repair metorlarını kullanarak en fazla 15  cevaplar ile sohbeti devam ettir."}
-  
+
   # Initialize messages
   messages = []
 
@@ -29,7 +29,7 @@ def get_recent_messages():
   try:
     with open(file_name) as user_file:
       data = json.load(user_file)
-      
+
       # Append last 5 rows of data
       if data:
         if len(data) < 5:
@@ -41,10 +41,8 @@ def get_recent_messages():
   except:
     pass
 
-  
   # Return messages
   return messages
-
 
 # Save messages for retrieval later on
 def store_messages(request_message, response_message):
@@ -64,7 +62,6 @@ def store_messages(request_message, response_message):
   # Save the updated file
   with open(file_name, "w") as f:
     json.dump(messages, f)
-
 
 # Save messages for retrieval later on
 def reset_messages():

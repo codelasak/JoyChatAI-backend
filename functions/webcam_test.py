@@ -3,13 +3,17 @@ from deepface import DeepFace
 import mediapipe as mp
 import time
 import numpy as np
-import base64
-from io import BytesIO
-from PIL import Image
 
 # Initialize MediaPipe Face Mesh
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(max_num_faces=1, refine_landmarks=True, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+
+# Start capturing video
+cap = cv2.VideoCapture(0)
+
+# Initialize variables for FPS calculation
+prev_frame_time = 0
+new_frame_time = 0
 
 # Initialize variables for gaze tracking
 gaze_times = {'left': 0, 'center': 0, 'right': 0}
@@ -70,23 +74,18 @@ def update_gaze_times(gaze):
     last_gaze = gaze
     last_gaze_time = current_time
 
-def detect_emotion_and_gaze(base64_image):
-    # Decode the base64 image
-    image_data = base64.b64decode(base64_image.split(',')[1])
-    image = Image.open(BytesIO(image_data))
-    
-    # Convert PIL Image to numpy array
-    frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+    if not ret:
+        print("Failed to grab frame")
+        break
 
-    # Convert the BGR image to RGB for MediaPipe
+    # Convert the BGR image to RGB
     rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     # Process the image and get facial landmarks
     results = face_mesh.process(rgb_frame)
-
-    emotion = None
-    confidence = None
-    gaze_direction = None
 
     if results.multi_face_landmarks:
         for face_landmarks in results.multi_face_landmarks:
@@ -107,9 +106,17 @@ def detect_emotion_and_gaze(base64_image):
                 
                 # Get the confidence score
                 confidence = result[0]['emotion'][emotion]
+                
+                # Draw rectangle around face and label with predicted emotion and confidence
+                cv2.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (0, 255, 0), 2)
+                cv2.putText(frame, f"{emotion} ({confidence:.2f}%)", (int(x), int(y-10)), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
             
             except Exception as e:
                 print(f"Error in emotion detection: {str(e)}")
+                cv2.rectangle(frame, (int(x), int(y)), (int(x+w), int(y+h)), (0, 0, 255), 2)
+                cv2.putText(frame, "Error", (int(x), int(y-10)), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
 
             # Get gaze direction
             gaze_direction = get_gaze_direction(face_landmarks, frame.shape)
@@ -117,15 +124,25 @@ def detect_emotion_and_gaze(base64_image):
             # Update gaze times
             update_gaze_times(gaze_direction)
 
-    return {
-        "emotion": emotion,
-        "confidence": confidence,
-        "gaze_direction": gaze_direction,
-        "gaze_times": gaze_times
-    }
+            # Display gaze direction and times
+            cv2.putText(frame, f"Gaze: {gaze_direction}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(frame, f"Left: {gaze_times['left']:.2f}s", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+            cv2.putText(frame, f"Center: {gaze_times['center']:.2f}s", (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+            cv2.putText(frame, f"Right: {gaze_times['right']:.2f}s", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
-def reset_gaze_times():
-    global gaze_times, last_gaze, last_gaze_time
-    gaze_times = {'left': 0, 'center': 0, 'right': 0}
-    last_gaze = None
-    last_gaze_time = time.time()
+    # Calculate and display FPS
+    new_frame_time = time.time()
+    fps = 1 / (new_frame_time - prev_frame_time)
+    prev_frame_time = new_frame_time
+    cv2.putText(frame, f"FPS: {fps:.2f}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+    # Display the resulting frame
+    cv2.imshow('Real-time Emotion and Gaze Detection', frame)
+
+    # Press 'q' to exit
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Release the capture and close all windows
+cap.release()
+cv2.destroyAllWindows()
